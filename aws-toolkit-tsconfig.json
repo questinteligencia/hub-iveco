@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "typeRoots": [
+          "/home/luiz/Quest/indecx/hub-iveco/node_modules/@types"
+        ],
+        "types": [
+          "node"
+        ],
+        "target": "es6",
+        "module": "commonjs",
+        "outDir": "/home/luiz/Quest/indecx/hub-iveco/aws-toolkit-ts-output",
+        "rootDir": ".",
+        "sourceRoot": "/home/luiz/Quest/indecx/hub-iveco",
+        "sourceMap": true
+    }
+}

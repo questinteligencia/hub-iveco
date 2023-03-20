@@ -1,0 +1,202 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  hub-iveco
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Layers:
+      - !Ref runtimeDependenciesLayer
+    Runtime: nodejs14.x
+    MemorySize: 256
+    Timeout: 60
+
+Parameters:
+  #Production environment
+  MySQLIvecoHostProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_MYSQL_HOST'
+
+  MySQLIvecoUserProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_MYSQL_USERNAME'
+
+  MySQLIvecoPasswordProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_MYSQL_PASSWORD'
+
+  MySQLIvecoDatabaseProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_MYSQL_DATABASE'
+
+  MySQLIvecoPortProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_MYSQL_PORT'
+
+  AwsSqsIvecoEndpointProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_AWS_SQS_ENDPOINT'
+
+  AwsSqsIvecoSaleQueueProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_AWS_SQS_STORE_SALE_QUEUE'
+
+  AwsSqsIvecoAfterSaleQueueProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_AWS_SQS_STORE_AFTER_SALE_QUEUE'
+
+  AwsSqsIvecoSaleDeadQueueProduction:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_AWS_SQS_STORE_SALE_DEAD_QUEUE'
+
+  AwsSqsIvecoAfterSaleDeadQueueProduction:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_AWS_SQS_STORE_AFTER_SALE_DEAD_QUEUE'
+
+  AwsSqsIvecoRegionProduction:
+    Type : 'AWS::SSM::Parameter::Value<String>'
+    Default: 'production.lambda.HUBIVECO_AWS_SQS_REGION'
+
+
+Resources:
+  #Sales
+  hubIvecoSalesValidatorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-iveco-sale-validate-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/sale/validator.requestApiHandler
+      Role: 'arn:aws:iam::777825471459:role/indecx-lambda'
+      Environment:
+        Variables:
+          MYSQL_IVECO_HOST: !Ref MySQLIvecoHostProduction
+          MYSQL_IVECO_USERNAME: !Ref MySQLIvecoUserProduction
+          MYSQL_IVECO_PASSWORD: !Ref MySQLIvecoPasswordProduction
+          MYSQL_IVECO_DATABASE: !Ref MySQLIvecoDatabaseProduction
+          MYSQL_IVECO_PORT: !Ref MySQLIvecoPortProduction
+          AWS_SQS_ENDPOINT: !Ref AwsSqsIvecoEndpointProduction
+          AWS_SQS_REGION: !Ref AwsSqsIvecoRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE: !Ref AwsSqsIvecoSaleQueueProduction
+
+  hubIvecoSalesProcessorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-iveco-sale-processor-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/sale/processor.sqsEventHandler
+      Role: 'arn:aws:iam::777825471459:role/indecx-lambda'
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: 'arn:aws:sqs:us-east-1:777825471459:hub-iveco-sale-processor-production'
+            BatchSize: 1
+      Environment:
+        Variables:
+          MYSQL_IVECO_HOST: !Ref MySQLIvecoHostProduction
+          MYSQL_IVECO_USERNAME: !Ref MySQLIvecoUserProduction
+          MYSQL_IVECO_PASSWORD: !Ref MySQLIvecoPasswordProduction
+          MYSQL_IVECO_DATABASE: !Ref MySQLIvecoDatabaseProduction
+          MYSQL_IVECO_PORT: !Ref MySQLIvecoPortProduction
+
+  hubIvecoSalesMonitorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-iveco-sale-monitoring-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/monitoring/dead-queue.scheduledEventHandler
+      Role: 'arn:aws:iam::777825471459:role/indecx-lambda'
+      Events:
+        SchedEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Environment:
+        Variables:
+          AWS_SQS_ENDPOINT: !Ref AwsSqsIvecoEndpointProduction
+          AWS_SQS_REGION: !Ref AwsSqsIvecoRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE: !Ref AwsSqsIvecoSaleQueueProduction
+          AWS_SQS_RECEIVER_QUEUE: !Ref AwsSqsIvecoSaleDeadQueueProduction
+
+  #After-sales
+  hubIvecoAfterSalesValidatorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-iveco-after-sale-validate-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/after-sale/validator.requestApiHandler
+      Role: 'arn:aws:iam::777825471459:role/indecx-lambda'
+      Environment:
+        Variables:
+          MYSQL_IVECO_HOST: !Ref MySQLIvecoHostProduction
+          MYSQL_IVECO_USERNAME: !Ref MySQLIvecoUserProduction
+          MYSQL_IVECO_PASSWORD: !Ref MySQLIvecoPasswordProduction
+          MYSQL_IVECO_DATABASE: !Ref MySQLIvecoDatabaseProduction
+          MYSQL_IVECO_PORT: !Ref MySQLIvecoPortProduction
+          AWS_SQS_ENDPOINT: !Ref AwsSqsIvecoEndpointProduction
+          AWS_SQS_REGION: !Ref AwsSqsIvecoRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE: !Ref AwsSqsIvecoAfterSaleQueueProduction
+
+  hubIvecoAfterSalesProcessorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-iveco-after-sale-processor-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/after-sale/processor.sqsEventHandler
+      Role: 'arn:aws:iam::777825471459:role/indecx-lambda'
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: 'arn:aws:sqs:us-east-1:777825471459:hub-iveco-after-sale-processor-production'
+            BatchSize: 1
+      Environment:
+        Variables:
+          MYSQL_IVECO_HOST: !Ref MySQLIvecoHostProduction
+          MYSQL_IVECO_USERNAME: !Ref MySQLIvecoUserProduction
+          MYSQL_IVECO_PASSWORD: !Ref MySQLIvecoPasswordProduction
+          MYSQL_IVECO_DATABASE: !Ref MySQLIvecoDatabaseProduction
+          MYSQL_IVECO_PORT: !Ref MySQLIvecoPortProduction
+
+  hubIvecoAfterSalesMonitorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-iveco-after-sale-monitoring-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/monitoring/dead-queue.scheduledEventHandler
+      Role: 'arn:aws:iam::777825471459:role/indecx-lambda'
+      Events:
+        SchedEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Environment:
+        Variables:
+          AWS_SQS_ENDPOINT: !Ref AwsSqsIvecoEndpointProduction
+          AWS_SQS_REGION: !Ref AwsSqsIvecoRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE: !Ref AwsSqsIvecoAfterSaleQueueProduction
+          AWS_SQS_RECEIVER_QUEUE: !Ref AwsSqsIvecoAfterSaleDeadQueueProduction
+
+  runtimeDependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Description: Runtime dependencies for Lambdas
+      ContentUri: ./
+      CompatibleRuntimes:
+        - nodejs14.x
+      RetentionPolicy: Retain

@@ -1,0 +1,424 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "hub-iveco\n"
+Globals:
+  Function:
+    Layers:
+    - Ref: runtimeDependenciesLayer
+    Runtime: nodejs14.x
+    MemorySize: 256
+    Timeout: 60
+Parameters:
+  MySQLHostProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_MYSQL_HOST
+  MySQLUserProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_MYSQL_USERNAME
+  MySQLPasswordProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_MYSQL_PASSWORD
+  MySQLDatabaseProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_MYSQL_DATABASE
+  MySQLPortProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_MYSQL_PORT
+  AwsSqsEndpointProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_AWS_SQS_ENDPOINT
+  AwsSqsSaleQueueProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_AWS_SQS_STORE_SALE_QUEUE
+  AwsSqsAfterSaleQueueProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_AWS_SQS_STORE_AFTER_SALE_QUEUE
+  AwsSqsSaleDeadQueueProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_AWS_SQS_STORE_SALE_DEAD_QUEUE
+  AwsSqsAfterSaleDeadQueueProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_AWS_SQS_STORE_AFTER_SALE_DEAD_QUEUE
+  AwsSqsRegionProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.HUBIVECO_AWS_SQS_REGION
+  AwsDmsDynamoProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.DMS_DYNAMO
+  AwsDynamoRegionProduction:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: production.lambda.AWS_DYNAMO_REGION
+  MySQLHostStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_MYSQL_HOST
+  MySQLUserStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_MYSQL_USERNAME
+  MySQLPasswordStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_MYSQL_PASSWORD
+  MySQLDatabaseStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_MYSQL_DATABASE
+  MySQLPortStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_MYSQL_PORT
+  AwsSqsEndpointStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.AWS_SQS_ENDPOINT
+  AwsSqsSaleQueueStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_AWS_SQS_STORE_SALE_QUEUE
+  AwsSqsAfterSaleQueueStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_AWS_SQS_STORE_AFTER_SALE_QUEUE
+  AwsSqsSaleDeadQueueStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_AWS_SQS_STORE_SALE_DEAD_QUEUE
+  AwsSqsAfterSaleDeadQueueStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.HUBIVECO_AWS_SQS_STORE_AFTER_SALE_DEAD_QUEUE
+  AwsSqsRegionStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.AWS_SQS_REGION
+  AwsDmsDynamoStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.DMS_DYNAMO
+  AwsDynamoRegionStaging:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: staging.lambda.AWS_DYNAMO_REGION
+Resources:
+  hubSalesValidatorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-sale-validade-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/sale/validator.requestApiHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostProduction
+          MYSQL_USERNAME:
+            Ref: MySQLUserProduction
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordProduction
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseProduction
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointProduction
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsSaleQueueProduction
+          DMS_DYNAMO:
+            Ref: AwsDmsDynamoProduction
+          AWS_DYNAMO_REGION:
+            Ref: AwsDynamoRegionProduction
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubSalesValidatorStaging:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-sale-validade-staging
+      Runtime: nodejs14.x
+      Handler: dist/handlers/sale/validator.requestApiHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostStaging
+          MYSQL_USERNAME:
+            Ref: MySQLUserStaging
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordStaging
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseStaging
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointStaging
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionStaging
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsSaleQueueStaging
+          DMS_DYNAMO:
+            Ref: AwsDmsDynamoStaging
+          AWS_DYNAMO_REGION:
+            Ref: AwsDynamoRegionStaging
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubSalesProcessorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-sale-processor-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/sale/processor.sqsEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: arn:aws:sqs:us-east-1:777825471459:hub-iveco-sale-processor-production
+            BatchSize: 1
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostProduction
+          MYSQL_USERNAME:
+            Ref: MySQLUserProduction
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordProduction
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseProduction
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubSalesProcessorStaging:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-sale-processor-staging
+      Runtime: nodejs14.x
+      Handler: dist/handlers/sale/processor.sqsEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: arn:aws:sqs:us-east-1:777825471459:hub-iveco-sale-processor-staging
+            BatchSize: 1
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostStaging
+          MYSQL_USERNAME:
+            Ref: MySQLUserStaging
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordStaging
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseStaging
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubSalesMonitorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-sale-monitoring-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/monitoring/dead-queue.scheduledEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SchedEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Environment:
+        Variables:
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointProduction
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsSaleQueueProduction
+          AWS_SQS_RECEIVER_QUEUE:
+            Ref: AwsSqsSaleDeadQueueProduction
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubSalesMonitorStaging:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-sale-monitoring-staging
+      Runtime: nodejs14.x
+      Handler: dist/handlers/monitoring/dead-queue.scheduledEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SchedEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Environment:
+        Variables:
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointStaging
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionStaging
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsSaleQueueStaging
+          AWS_SQS_RECEIVER_QUEUE:
+            Ref: AwsSqsSaleDeadQueueStaging
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubAfterSalesValidatorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-after-sale-validade-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/after-sale/validator.requestApiHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostProduction
+          MYSQL_USERNAME:
+            Ref: MySQLUserProduction
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordProduction
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseProduction
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointProduction
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsAfterSaleQueueProduction
+          DMS_DYNAMO:
+            Ref: AwsDmsDynamoProduction
+          AWS_DYNAMO_REGION:
+            Ref: AwsDynamoRegionProduction
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubAfterSalesValidatorStaging:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-after-sale-validade-staging
+      Runtime: nodejs14.x
+      Handler: dist/handlers/after-sale/validator.requestApiHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostStaging
+          MYSQL_USERNAME:
+            Ref: MySQLUserStaging
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordStaging
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseStaging
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointStaging
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionStaging
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsAfterSaleQueueStaging
+          DMS_DYNAMO:
+            Ref: AwsDmsDynamoStaging
+          AWS_DYNAMO_REGION:
+            Ref: AwsDynamoRegionStaging
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubAfterSalesProcessorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-after-sale-processor-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/after-sale/processor.sqsEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: arn:aws:sqs:us-east-1:777825471459:hub-iveco-after-sale-processor-production
+            BatchSize: 1
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostProduction
+          MYSQL_USERNAME:
+            Ref: MySQLUserProduction
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordProduction
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseProduction
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubAfterSalesProcessorStaging:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-after-sale-processor-staging
+      Runtime: nodejs14.x
+      Handler: dist/handlers/after-sale/processor.sqsEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: arn:aws:sqs:us-east-1:777825471459:hub-iveco-after-sale-processor-staging
+            BatchSize: 1
+      Environment:
+        Variables:
+          MYSQL_HOST:
+            Ref: MySQLHostStaging
+          MYSQL_USERNAME:
+            Ref: MySQLUserStaging
+          MYSQL_PASSWORD:
+            Ref: MySQLPasswordStaging
+          MYSQL_DATABASE:
+            Ref: MySQLDatabaseStaging
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubAfterSalesMonitorProduction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-after-sale-monitoring-production
+      Runtime: nodejs14.x
+      Handler: dist/handlers/monitoring/dead-queue.scheduledEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SchedEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Environment:
+        Variables:
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointProduction
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionProduction
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsAfterSaleQueueProduction
+          AWS_SQS_RECEIVER_QUEUE:
+            Ref: AwsSqsAfterSaleDeadQueueProduction
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  hubAfterSalesMonitorStaging:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: hub-after-sale-monitoring-staging
+      Runtime: nodejs14.x
+      Handler: dist/handlers/monitoring/dead-queue.scheduledEventHandler
+      Role: arn:aws:iam::777825471459:role/indecx-lambda
+      Events:
+        SchedEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Environment:
+        Variables:
+          AWS_SQS_ENDPOINT:
+            Ref: AwsSqsEndpointStaging
+          AWS_SQS_REGION:
+            Ref: AwsSqsRegionStaging
+          AWS_SQS_PUBLISHER_QUEUE:
+            Ref: AwsSqsAfterSaleQueueStaging
+          AWS_SQS_RECEIVER_QUEUE:
+            Ref: AwsSqsAfterSaleDeadQueueStaging
+      CodeUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+  runtimeDependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Description: Runtime dependencies for Lambdas
+      ContentUri: s3://hub-iveco-repository/d9dbe93dd79c8c1f9fddedbc9456e146
+      CompatibleRuntimes:
+      - nodejs14.x
+      RetentionPolicy: Retain

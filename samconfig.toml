@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "hub-iveco"
+s3_bucket = "hub-iveco-repository"
+s3_prefix = "hub-iveco"
+region = "us-east-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"

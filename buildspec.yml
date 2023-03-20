@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      # Install all dependencies (including dependencies for running tests)
+      - npm install
+  pre_build:
+    commands:
+      # Discover and run unit tests in the '__tests__' directory
+      - npm run __test__
+      # Remove all unit tests to reduce the size of the package that will be ultimately uploaded to Lambda
+      - rm -rf ./__tests__
+      # Remove all dependencies not needed for the Lambda deployment package (the packages from devDependencies in package.json)
+      - npm prune --production
+  build:
+    commands:
+      # Use AWS SAM to package the application by using AWS CloudFormation
+      - option 1: aws cloudformation package --template template.yaml --s3-bucket hub-iveco-repository --output-template template-export.yml
+                  aws cloudformation deploy --template-file /home/luiz/Quest/indecx/hub-iveco/template-export.yml --stack-name hub-iveco
+                  aws cloudformation delete-stack --stack-name hub-iveco
+      - options 2: sam build
+      -            sam deploy --stack-name hub-iveco
+
+artifacts:
+  type: zip
+  files:
+    - template-export.yml
