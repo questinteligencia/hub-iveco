@@ -19,7 +19,6 @@ class AfterSaleProcessorHandler extends BaseSQSHandler {
 /** This function starts the process of save the after sale */
 export const sqsEventHandler = async (event: SQSEvent): Promise<void> => {
     const afterSaleProcessorHandler: AfterSaleProcessorHandler = new AfterSaleProcessorHandler();
-    console.log('evento', event);
     return afterSaleProcessorHandler.handler(event);
 };
 

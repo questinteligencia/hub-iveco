@@ -23,6 +23,8 @@ export interface AfterSaleAttributes {
     data_abertura: Date;
     data_liberacao: Date;
     email: string;
+    segmento: string;
+    consultor: string;
     status_integracao: string;
 }
 
@@ -52,6 +54,8 @@ class AfterSale extends Model<AfterSaleAttributes, AfterSaleInput> {
     data_abertura: Date;
     data_liberacao: Date;
     email: string;
+    segmento: string;
+    consultor: string;
     status_integracao: string;
 }
 
@@ -84,6 +88,8 @@ AfterSale.init({
         type: DataTypes.DATE,
     },
     email: DataTypes.STRING,
+    segmento: DataTypes.STRING,
+    consultor: DataTypes.STRING,
     status_integracao: DataTypes.STRING,
 }, {
     sequelize: connection,

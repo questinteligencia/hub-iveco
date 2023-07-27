@@ -48,6 +48,8 @@ export class AfterSaleService {
                 data_abertura,
                 data_liberacao,
                 email,
+                segmento,
+                consultor,
                 status_integracao,
             } = afterSaleInput;
 
@@ -170,6 +172,8 @@ export class AfterSaleService {
                 data_abertura,
                 data_liberacao,
                 email,
+                segmento,
+                consultor,
                 status_integracao,
             };
         } catch (error) {
